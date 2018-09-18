@@ -1,6 +1,6 @@
 {
   "name": "vue-role-manager",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Vue.js plugin that manage user roles. Including routes protect, vue directive.",
   "main": "./dist/vue-role-manager.common.js",
   "module": "./dist/vue-role-manager.esm.js",
