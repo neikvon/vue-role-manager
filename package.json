@@ -15,13 +15,13 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fbi-templates/vue-role-manager.git"
+    "url": "git+https://github.com/neikvon/vue-role-manager.git"
   },
   "scripts": {},
   "bugs": {
-    "url": "https://github.com/fbi-templates/vue-role-manager/issues"
+    "url": "https://github.com/neikvon/vue-role-manager/issues"
   },
-  "homepage": "https://github.com/fbi-templates/vue-role-manager#readme",
+  "homepage": "https://github.com/neikvon/vue-role-manager#readme",
   "fbi": {
     "template": {
       "name": "fbi-project-lib",

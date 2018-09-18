@@ -26,7 +26,7 @@ Vue.use(VRM, options)
 ```js
 {
   path: '/home',
-  name: 'home,
+  name: 'home',
   component: home,
   meta: {
     roles
