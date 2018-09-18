@@ -1,0 +1,31 @@
+{
+  "name": "vue-role-manager",
+  "version": "0.0.1",
+  "description": "A Vue.js plugin that manage user roles. Including routes protect, vue directive.",
+  "main": "./dist/vue-role-manager.common.js",
+  "module": "./dist/vue-role-manager.esm.js",
+  "unpkg": "./dist/vue-role-manager.umd.min.js",
+  "keywords": [
+    "vue",
+    "role",
+    "manager"
+  ],
+  "author": "neikvon",
+  "license": "MIT",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fbi-templates/vue-role-manager.git"
+  },
+  "scripts": {},
+  "bugs": {
+    "url": "https://github.com/fbi-templates/vue-role-manager/issues"
+  },
+  "homepage": "https://github.com/fbi-templates/vue-role-manager#readme",
+  "fbi": {
+    "template": {
+      "name": "fbi-project-lib",
+      "version": "v1.0.6"
+    }
+  }
+}

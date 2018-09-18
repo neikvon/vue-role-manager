@@ -1,3 +1,8 @@
+# fbi
+/dist/
+.DS_Store
+.deps
+
 # Logs
 logs
 *.log
