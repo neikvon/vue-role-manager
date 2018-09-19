@@ -36,49 +36,55 @@ Vue.use(VRM, options)
 
 **roles**
 
-```js
-// String or Number
-roles: 'role1'
-roles: 1
+- (Array of) String or Number
 
-// Array of String or Number
-roles: ['role1', 'role2']
-roles: [1, 2]
+  ```js
+  roles: 'role1'
+  roles: 1
 
-// Object
-roles: {
-  allow: 'role1',
-  deny: 'role3',
-  redirect: 'login',
-  whitelist: ['login']
-}
+  roles: ['role1', 'role2']
+  roles: [1, 2]
+  ```
 
-roles: {
-  allow: ['role1', 'role2'],
-  deny: ['role3']
-}
+- Object
 
-// Function
-// roles: current user roles
-// route: current route object
-roles: {
-  allow: (roles, route) => {
-    return ['role1', 'role2']
-  }
-}
-
-roles: (roles, route) => {
-  return {
+  ```js
+  roles: {
     allow: 'role1',
     deny: 'role3',
-    redirect: '401'
+    redirect: 'login',
+    whitelist: ['login']
   }
-}
-```
+
+  roles: {
+    allow: ['role1', 'role2'],
+    deny: ['role3']
+  }
+  ```
+
+- Function
+
+  ```js
+  // roles: current user roles
+  // route: current route object
+  roles: {
+    allow: (roles, route) => {
+      return ['role1', 'role2']
+    }
+  }
+
+  roles: (roles, route) => {
+    return {
+      allow: 'role1',
+      deny: 'role3',
+      redirect: '401',
+    }
+  }
+  ```
 
 ## Methods
 
-**setRoles**
+**setRoles(string|array|null)**
 
 ```js
 // set current user's roles
@@ -87,32 +93,46 @@ Vue.prototype.$vrm.setRoles(userinfo.roles)
 this.$vrm.setRoles(null)
 ```
 
-**getRoles**
+**getRoles()**
 
 ```js
 // get current user's roles
-Vue.prototype.$vrm.getRoles()
+const userRoles = Vue.prototype.$vrm.getRoles()
 
-this.$vrm.getRoles()
+const userRoles = this.$vrm.getRoles()
 ```
 
-**hasAccess**
+**hasAccess([])**
 
 ```js
 // check current user's role
-this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
+const hasAccess = this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
 ```
 
-**addRoutes**
+**addRoutes([route configs])**
 
 ```js
 const filteredNewRoutes = this.$vrm.addRoutes([...])
-// return filtered new route base on current user's roles
+// return filtered new routes base on current user's roles
+```
+
+**hasAccessToRoute(string|route)**
+
+```js
+this.$store.dispatch('user/hasLogin').then(hasLogin => {
+  if (hasLogin) {
+    const redirectTo = this.$route.query.redirect
+    const { access, redirect } = this.$vrm.hasAccessToRoute(redirectTo)
+    if (access) {
+      this.$router.push(redirectTo)
+    }
+  }
+})
 ```
 
 ## Directive
 
-**arg**
+**args**
 
 - action
 - class

@@ -34,7 +34,7 @@ export default class Manager {
   setRoles (roles) {
     this.vm.userRoles = roles
     if (this.to && this.router) {
-      const { access, redirect } = this._hasAccessToRoute(this.to)
+      const { access, redirect } = this.hasAccessToRoute(this.to)
       if (!access) {
         this.router.push({
           name: redirect,
@@ -71,7 +71,7 @@ export default class Manager {
 
   resolve (to, from, next) {
     this.to = to
-    const { access, redirect, skipped } = this._hasAccessToRoute(to)
+    const { access, redirect, skipped } = this.hasAccessToRoute(to)
 
     if (this.debug && !skipped) {
       console.log(
@@ -93,10 +93,14 @@ export default class Manager {
       })
   }
 
-  _hasAccessToRoute (route, isFilter) {
-    if (this.whitelist.includes(route.name)) {
+  hasAccessToRoute (route, isFilter) {
+    const _route = typeof route === 'string'
+      ? this.router.resolve(route).route
+      : route
+
+    if (this.whitelist.includes(_route.name)) {
       if (this.debug) {
-        console.log('[VRM] skipped:', route.name)
+        console.log('[VRM] skipped:', _route.name)
       }
       return {
         access: true,
@@ -106,7 +110,7 @@ export default class Manager {
 
     // user roles
     const roles = this._wrapUserRoles()
-    const routes = route.matched || [route]
+    const routes = _route.matched || [_route]
 
     let result
     for (let i = routes.length - 1; i >= 0; i--) {
@@ -131,7 +135,7 @@ export default class Manager {
     }
 
     if (isFilter && this.debug) {
-      console.log('[VRM] filter:', route.path, result ? 'DENY' : 'ALLOW')
+      console.log('[VRM] filter:', _route.path, result ? 'DENY' : 'ALLOW')
     }
 
     return (
@@ -244,7 +248,7 @@ export default class Manager {
 
   _routesFilter (routes, isFilter) {
     const allowedRoutes = routes.filter(route => {
-      const tmp = this._hasAccessToRoute(route, isFilter)
+      const tmp = this.hasAccessToRoute(route, isFilter)
       if (tmp.access) {
         if (route.children && route.children.length) {
           route.children = this._routesFilter(route.children, isFilter)
