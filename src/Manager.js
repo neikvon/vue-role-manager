@@ -55,18 +55,62 @@ export default class Manager {
     return roles.some(role => configs.includes(role))
   }
 
-  addRoutes (routes) {
-    let allowdRoutes
-    const _routes = Array.isArray(routes) ? routes : [routes]
-    allowdRoutes = this._routesFilter(_routes, true)
-
-    if (allowdRoutes.length > 0) {
-      this.router.addRoutes(allowdRoutes, {
-        replace: true
-      })
+  addRoutes (routes, parent) {
+    let allRoutes = this.router.options.routes
+    if (!routes) {
+      return {
+        allRoutes
+      }
     }
 
-    return allowdRoutes
+    let matchedRoute
+
+    if (parent) {
+      const _parent =
+        typeof parent === 'string'
+          ? {
+            name: parent
+          }
+          : parent
+
+      matchedRoute = _parent.name
+        ? allRoutes.find(r => r.name === _parent.name)
+        : allRoutes.find(r => r.path === _parent.path)
+
+      if (!matchedRoute) {
+        return {
+          allRoutes
+        }
+      }
+    }
+
+    const _routes = Array.isArray(routes) ? routes : [routes]
+    const allowdRoutes = this._routesFilter(_routes, true)
+    if (!allowdRoutes || allowdRoutes.length < 0) {
+      return {
+        allRoutes
+      }
+    }
+
+    if (parent) {
+      matchedRoute.children = matchedRoute.children || []
+      matchedRoute.children = matchedRoute.children.concat(allowdRoutes)
+    } else {
+      matchedRoute = allowdRoutes
+      allRoutes = allRoutes.concat(allowdRoutes)
+    }
+
+    this.router.addRoutes(
+      Array.isArray(matchedRoute) ? matchedRoute : [matchedRoute],
+      {
+        replace: true
+      }
+    )
+
+    return {
+      addedRoutes: matchedRoute,
+      allRoutes
+    }
   }
 
   resolve (to, from, next) {
@@ -94,9 +138,8 @@ export default class Manager {
   }
 
   hasAccessToRoute (route, isFilter) {
-    const _route = typeof route === 'string'
-      ? this.router.resolve(route).route
-      : route
+    const _route =
+      typeof route === 'string' ? this.router.resolve(route).route : route
 
     if (this.whitelist.includes(_route.name)) {
       if (this.debug) {
