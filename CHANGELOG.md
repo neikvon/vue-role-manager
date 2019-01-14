@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/neikvon/vue-role-manager/compare/v0.1.0...v1.0.0) (2019-01-14)
+
+
+### Features
+
+* **addRoutes:** dynamically add child routes to an existing route ([8717e2d](https://github.com/neikvon/vue-role-manager/commit/8717e2d))
+* add child route ([992f155](https://github.com/neikvon/vue-role-manager/commit/992f155))
+
+
+### BREAKING CHANGES
+
+* add top level route, add child route
+
+
+
 <a name="0.1.0"></a>
 # [0.1.0](https://github.com/neikvon/vue-role-manager/compare/v0.0.3...v0.1.0) (2018-09-19)
 
