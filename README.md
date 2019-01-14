@@ -77,7 +77,7 @@ Vue.use(VRM, options)
     return {
       allow: 'role1',
       deny: 'role3',
-      redirect: '401',
+      redirect: '401'
     }
   }
   ```
@@ -109,11 +109,16 @@ const userRoles = this.$vrm.getRoles()
 const hasAccess = this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
 ```
 
-**addRoutes([route configs])**
+**addRoutes([route configs][, parent])**
 
 ```js
 const filteredNewRoutes = this.$vrm.addRoutes([...])
 // return filtered new routes base on current user's roles
+
+const filteredNewRoutes = this.$vrm.addRoutes([...], '/parent-path')
+const filteredNewRoutes = this.$vrm.addRoutes([...], 'parent-name')
+const filteredNewRoutes = this.$vrm.addRoutes([...], { path: '/parent-path' })
+const filteredNewRoutes = this.$vrm.addRoutes([...], { name: 'parent-name' })
 ```
 
 **hasAccessToRoute(string|route)**

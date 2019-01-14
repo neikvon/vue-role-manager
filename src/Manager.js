@@ -55,23 +55,38 @@ export default class Manager {
     return roles.some(role => configs.includes(role))
   }
 
+  /**
+   * Add routes
+   * addRoutes([routesConfig])
+   * addRoutes([routesConfig], '/parent')
+   * addRoutes([routesConfig], 'parent')
+   * addRoutes([routesConfig], { path: '/parent' })
+   * addRoutes([routesConfig], { name: 'parent' })
+   * @param {Array} routes
+   * @param {String|Object} parent
+   * @returns
+   * @memberof Manager
+   */
   addRoutes (routes, parent) {
     let allRoutes = this.router.options.routes
-    if (!routes) {
+    if (!routes || routes.length < 1) {
       return {
         allRoutes
       }
     }
 
     let matchedRoute
-
     if (parent) {
-      const _parent =
-        typeof parent === 'string'
+      let _parent = parent
+      if (typeof parent === 'string') {
+        _parent = parent.startsWith('/')
           ? {
+            path: parent
+          }
+          : {
             name: parent
           }
-          : parent
+      }
 
       matchedRoute = _parent.name
         ? allRoutes.find(r => r.name === _parent.name)
@@ -85,7 +100,8 @@ export default class Manager {
     }
 
     const _routes = Array.isArray(routes) ? routes : [routes]
-    const allowdRoutes = this._routesFilter(_routes, true)
+    const allowdRoutes = this._routesFilterByRole(_routes, true)
+
     if (!allowdRoutes || allowdRoutes.length < 0) {
       return {
         allRoutes
@@ -97,7 +113,7 @@ export default class Manager {
       matchedRoute.children = matchedRoute.children.concat(allowdRoutes)
     } else {
       matchedRoute = allowdRoutes
-      allRoutes = allRoutes.concat(allowdRoutes)
+      allRoutes = this.router.options.routes.concat(allowdRoutes)
     }
 
     this.router.addRoutes(
@@ -289,12 +305,12 @@ export default class Manager {
     return Array.isArray(roles) ? roles : [roles]
   }
 
-  _routesFilter (routes, isFilter) {
+  _routesFilterByRole (routes, isFilter) {
     const allowedRoutes = routes.filter(route => {
       const tmp = this.hasAccessToRoute(route, isFilter)
       if (tmp.access) {
         if (route.children && route.children.length) {
-          route.children = this._routesFilter(route.children, isFilter)
+          route.children = this._routesFilterByRole(route.children, isFilter)
         }
         return true
       }
