@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.1"></a>
+## [1.0.1](https://github.com/neikvon/vue-role-manager/compare/v1.0.0...v1.0.1) (2019-02-26)
+
+
+### Bug Fixes
+
+* allRoutes is not all ([77bf01c](https://github.com/neikvon/vue-role-manager/commit/77bf01c))
+
+
+
 <a name="1.0.0"></a>
 # [1.0.0](https://github.com/neikvon/vue-role-manager/compare/v0.1.0...v1.0.0) (2019-01-14)
 
