@@ -22,6 +22,8 @@ export default class Manager {
         userRoles: null
       }
     })
+
+    this.allRoutes = this.router.options.routes || []
   }
 
   getRoles () {
@@ -68,10 +70,10 @@ export default class Manager {
    * @memberof Manager
    */
   addRoutes (routes, parent) {
-    let allRoutes = this.router.options.routes
+    // let allRoutes = this.router.options.routes
     if (!routes || routes.length < 1) {
       return {
-        allRoutes
+        allRoutes: this.allRoutes
       }
     }
 
@@ -89,12 +91,12 @@ export default class Manager {
       }
 
       matchedRoute = _parent.name
-        ? allRoutes.find(r => r.name === _parent.name)
-        : allRoutes.find(r => r.path === _parent.path)
+        ? this.allRoutes.find(r => r.name === _parent.name)
+        : this.allRoutes.find(r => r.path === _parent.path)
 
       if (!matchedRoute) {
         return {
-          allRoutes
+          allRoutes: this.allRoutes
         }
       }
     }
@@ -104,7 +106,7 @@ export default class Manager {
 
     if (!allowdRoutes || allowdRoutes.length < 0) {
       return {
-        allRoutes
+        allRoutes: this.allRoutes
       }
     }
 
@@ -113,7 +115,7 @@ export default class Manager {
       matchedRoute.children = matchedRoute.children.concat(allowdRoutes)
     } else {
       matchedRoute = allowdRoutes
-      allRoutes = this.router.options.routes.concat(allowdRoutes)
+      this.allRoutes = this.allRoutes.concat(allowdRoutes)
     }
 
     this.router.addRoutes(
@@ -125,10 +127,9 @@ export default class Manager {
 
     return {
       addedRoutes: matchedRoute,
-      allRoutes
+      allRoutes: this.allRoutes
     }
   }
-
   resolve (to, from, next) {
     this.to = to
     const { access, redirect, skipped } = this.hasAccessToRoute(to)
