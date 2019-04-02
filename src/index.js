@@ -1,5 +1,6 @@
 import Manager from './Manager'
 import directive from './directive'
+import { version } from '../package.json'
 
 function plugin (Vue, opts) {
   const manager = new Manager(Vue, opts)
@@ -15,7 +16,7 @@ function plugin (Vue, opts) {
   Vue.directive('roles', directive(manager))
 }
 
-plugin.version = '0.0.1'
+plugin.version = version
 
 if (typeof window !== 'undefined' && window.Vue) {
   window.Vue.use(plugin)

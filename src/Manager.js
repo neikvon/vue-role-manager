@@ -8,7 +8,7 @@ export default class Manager {
       redirect = 'login',
       metaName = 'roles',
       whitelist = [],
-      debug = false
+      debug = process.env.NODE_ENV === 'development'
     } = {}
   ) {
     this.router = router
@@ -24,6 +24,7 @@ export default class Manager {
     })
 
     this.allRoutes = this.router.options.routes || []
+    this.tmpRoute = null
   }
 
   getRoles () {
@@ -70,7 +71,6 @@ export default class Manager {
    * @memberof Manager
    */
   addRoutes (routes, parent) {
-    // let allRoutes = this.router.options.routes
     if (!routes || routes.length < 1) {
       return {
         allRoutes: this.allRoutes
@@ -89,9 +89,8 @@ export default class Manager {
             name: parent
           }
       }
-
       matchedRoute = _parent.name
-        ? this.allRoutes.find(r => r.name === _parent.name)
+        ? this.findRouteByName(_parent.name)
         : this.allRoutes.find(r => r.path === _parent.path)
 
       if (!matchedRoute) {
@@ -203,6 +202,29 @@ export default class Manager {
         access: true
       }
     )
+  }
+
+  findRouteByName (name, routes = this.allRoutes) {
+    if (this.tmpRoute) {
+      this.tmpRoute = null
+    }
+    if (!name || !Array.isArray(routes)) {
+      return null
+    }
+
+    for (let i = 0, len = routes.length; i < len; i++) {
+      const item = routes[i]
+      if (item.name === name) {
+        this.tmpRoute = item
+      } else if (Array.isArray(item.children)) {
+        this.findRouteByName(name, item.children)
+      }
+      if (this.tmpRoute) {
+        break
+      }
+    }
+
+    return this.tmpRoute
   }
 
   /**
