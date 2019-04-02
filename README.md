@@ -20,6 +20,7 @@ Vue.use(VRM, options)
 - `whitelist`: (optional) Array of route names. VRM will skip checking these
   routes.
 - `debug`: (optional) Show debug info in console or not. default: `false`
+- `enabled`: (optional) Enable route filter by role or not. default: `true`
 
 ## Router config
 
@@ -112,13 +113,8 @@ const hasAccess = this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
 **addRoutes([route configs][, parent])**
 
 ```js
-const filteredNewRoutes = this.$vrm.addRoutes([...])
-// return filtered new routes base on current user's roles
-
-const filteredNewRoutes = this.$vrm.addRoutes([...], '/parent-path')
-const filteredNewRoutes = this.$vrm.addRoutes([...], 'parent-name')
-const filteredNewRoutes = this.$vrm.addRoutes([...], { path: '/parent-path' })
-const filteredNewRoutes = this.$vrm.addRoutes([...], { name: 'parent-name' })
+const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...])
+const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...], 'parent-name')
 ```
 
 **hasAccessToRoute(string|route)**
