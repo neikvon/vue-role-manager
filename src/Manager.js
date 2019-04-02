@@ -8,7 +8,8 @@ export default class Manager {
       redirect = 'login',
       metaName = 'roles',
       whitelist = [],
-      debug = process.env.NODE_ENV === 'development'
+      debug = process.env.NODE_ENV === 'development',
+      enabled = true
     } = {}
   ) {
     this.router = router
@@ -16,6 +17,7 @@ export default class Manager {
     this.metaName = metaName
     this.whitelist = Array.isArray(whitelist) ? whitelist : [whitelist]
     this.debug = debug
+    this.enabled = enabled
 
     this.vm = new Vue({
       data: {
@@ -101,7 +103,9 @@ export default class Manager {
     }
 
     const _routes = Array.isArray(routes) ? routes : [routes]
-    const allowdRoutes = this._routesFilterByRole(_routes, true)
+    const allowdRoutes = this.enabled
+      ? this._routesFilterByRole(_routes, true)
+      : _routes
 
     if (!allowdRoutes || allowdRoutes.length < 0) {
       return {
