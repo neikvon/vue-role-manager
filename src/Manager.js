@@ -55,7 +55,7 @@ export default class Manager {
     if (!_configs) {
       throw new Error('param is required')
     }
-    const configs = Array.isArray(configs) ? configs : [configs]
+    const configs = Array.isArray(_configs) ? _configs : [_configs]
     const roles = this._wrapUserRoles()
     return roles.some(role => configs.includes(role))
   }
@@ -269,7 +269,7 @@ export default class Manager {
    * @memberof Manager
    */
   _getMetaRoles (route) {
-    let configs = {
+    const configs = {
       allow: null,
       deny: null,
       redirect: null
