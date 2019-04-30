@@ -18,6 +18,7 @@ export default class Manager {
     this.whitelist = Array.isArray(whitelist) ? whitelist : [whitelist]
     this.debug = debug
     this.enabled = enabled
+    this.whitelist.push(this.defaultRedirect)
 
     this.vm = new Vue({
       data: {
@@ -103,9 +104,7 @@ export default class Manager {
     }
 
     const _routes = Array.isArray(routes) ? routes : [routes]
-    const allowdRoutes = this.enabled
-      ? this._routesFilterByRole(_routes, true)
-      : _routes
+    const allowdRoutes = this.enabled ? this._routesFilterByRole(_routes, true) : _routes
 
     if (!allowdRoutes || allowdRoutes.length < 0) {
       return {
@@ -121,12 +120,9 @@ export default class Manager {
       this.allRoutes = this.allRoutes.concat(allowdRoutes)
     }
 
-    this.router.addRoutes(
-      Array.isArray(matchedRoute) ? matchedRoute : [matchedRoute],
-      {
-        replace: true
-      }
-    )
+    this.router.addRoutes(Array.isArray(matchedRoute) ? matchedRoute : [matchedRoute], {
+      replace: true
+    })
 
     return {
       addedRoutes: matchedRoute,
@@ -158,8 +154,7 @@ export default class Manager {
   }
 
   hasAccessToRoute (route, isFilter) {
-    const _route =
-      typeof route === 'string' ? this.router.resolve(route).route : route
+    const _route = typeof route === 'string' ? this.router.resolve(route).route : route
 
     if (this.whitelist.includes(_route.name)) {
       if (this.debug) {
@@ -180,6 +175,9 @@ export default class Manager {
       const item = routes[i]
 
       const configs = this._getMetaRoles(item)
+      if (!configs) {
+        break
+      }
 
       if (configs.deny && roles.some(r => configs.deny.includes(r))) {
         result = {
@@ -235,6 +233,9 @@ export default class Manager {
    * getRolesFromMeta
    *
    m: (user, route) => {
+     return ['role1', 'role2']
+   }
+   m: (user, route) => {
      return {
        allow: 'role1',
        deny: 'role3',
@@ -282,7 +283,17 @@ export default class Manager {
     const meta = route.meta[this.metaName]
 
     if (typeof meta === 'function') {
-      return meta(this.vm.userRoles, route)
+      const result = meta(this.vm.userRoles, route)
+      return Object.assign(
+        {},
+        configs,
+        { redirect: this.defaultRedirect },
+        Array.isArray(result)
+          ? {
+            allow: result
+          }
+          : result
+      )
     }
 
     configs.redirect = meta.redirect || this.defaultRedirect

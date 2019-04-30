@@ -2,6 +2,7 @@
 /dist/
 .DS_Store
 .deps
+tmp
 
 # Logs
 logs

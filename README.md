@@ -12,7 +12,7 @@ import VRM from 'vue-role-manager'
 Vue.use(VRM, options)
 ```
 
-**options**
+### options
 
 - `router`: (required) Vue router instance
 - `redirect`: (optional) Default redirect name. default: `'login'`
@@ -35,7 +35,7 @@ Vue.use(VRM, options)
 }
 ```
 
-**roles**
+### roles
 
 - (Array of) String or Number
 
@@ -81,81 +81,89 @@ Vue.use(VRM, options)
       redirect: '401'
     }
   }
+  roles: (roles, route) => {
+    // Return allowed roles by default
+    return ['role1', 'role2']
+  }
   ```
 
 ## Methods
 
-**setRoles(string|array|null)**
+- setRoles(string|array|null)
 
-```js
-// set current user's roles
-Vue.prototype.$vrm.setRoles(userinfo.roles)
+  ```js
+  // set current user's roles
+  Vue.prototype.$vrm.setRoles(userinfo.roles)
 
-this.$vrm.setRoles(null)
-```
+  this.$vrm.setRoles(null)
+  ```
 
-**getRoles()**
+- getRoles()
 
-```js
-// get current user's roles
-const userRoles = Vue.prototype.$vrm.getRoles()
+  ```js
+  // get current user's roles
+  const userRoles = Vue.prototype.$vrm.getRoles()
 
-const userRoles = this.$vrm.getRoles()
-```
+  const userRoles = this.$vrm.getRoles()
+  ```
 
-**hasAccess([])**
+- hasAccess([])
 
-```js
-// check current user's role
-const hasAccess = this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
-```
+  ```js
+  // check current user's role
+  const hasAccess = this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
+  ```
 
-**addRoutes([route configs][, parent])**
+- addRoutes([route configs][, parent])
 
-```js
-const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...])
-const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...], 'parent-name')
-```
+  ```js
+  const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...])
+  const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...], 'parent-name')
+  ```
 
-**hasAccessToRoute(string|route)**
+- hasAccessToRoute(string|route)
 
-```js
-this.$store.dispatch('user/hasLogin').then(hasLogin => {
-  if (hasLogin) {
-    const redirectTo = this.$route.query.redirect
-    const { access, redirect } = this.$vrm.hasAccessToRoute(redirectTo)
-    if (access) {
-      this.$router.push(redirectTo)
+  ```js
+  this.$store.dispatch('user/hasLogin').then(hasLogin => {
+    if (hasLogin) {
+      const redirectTo = this.$route.query.redirect
+      const { access, redirect } = this.$vrm.hasAccessToRoute(redirectTo)
+      if (access) {
+        this.$router.push(redirectTo)
+      }
     }
-  }
-})
-```
+  })
+  ```
 
 ## Directive
 
-**args**
+- args
 
-- action
-- class
+  - action
+  - class
 
-**modifiers**
+- modifiers
 
-- action: remove, hidden, disable
-- class: any string
+  - action: remove, hidden, disable
+  - class: any string
 
-**Examples**
+- Examples
 
-```html
-<!-- only create the button for 'admin' -->
-<button v-roles="['admin']">Remove</button>
+  ```html
+  <!-- only create the button for 'admin' -->
+  <button v-roles="['admin']">Remove</button>
 
-<!-- same as above -->
-<!-- action available value: 'remove', 'hidden , 'disable' -->
-<button v-roles:action.remove="['admin']">Remove</button>
+  <!-- same as above -->
+  <!-- action available value: 'remove', 'hidden , 'disable' -->
+  <button v-roles:action.remove="['admin']">Remove</button>
 
-<!-- add class 'my-class-name' for those are neither 'admin' nor 'editor' -->
-<button v-roles:class.my-class-name="['admin', 'editor']">Edit</button>
-```
+  <!-- add class 'my-class-name' for those are neither 'admin' nor 'editor' -->
+  <button v-roles:class.my-class-name="['admin', 'editor']">Edit</button>
+  ```
+
+## Real world examples
+
+[examples/basic](./tree/master/examples/basic)
 
 ## [CHANGELOG](CHANGELOG.md)
 
