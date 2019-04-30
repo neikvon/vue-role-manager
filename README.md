@@ -163,7 +163,7 @@ Vue.use(VRM, options)
 
 ## Real world examples
 
-[examples/basic](./tree/master/examples/basic)
+[examples/basic](./examples/basic)
 
 ## [CHANGELOG](CHANGELOG.md)
 
