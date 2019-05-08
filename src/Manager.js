@@ -169,27 +169,41 @@ export default class Manager {
     // user roles
     const roles = this._wrapUserRoles()
     const routes = _route.matched || [_route]
+    const params = _route.params;
 
     let result
     for (let i = routes.length - 1; i >= 0; i--) {
       const item = routes[i]
 
-      const configs = this._getMetaRoles(item)
+      const configs = this._getMetaRoles(item, params)
       if (!configs) {
         break
       }
 
-      if (configs.deny && roles.some(r => configs.deny.includes(r))) {
+      if (this.isBoolean(configs.deny) && configs.deny) {
         result = {
           access: false,
           redirect: configs.redirect
         }
-
         break
-      } else if (configs.allow && !roles.some(r => configs.allow.includes(r))) {
+      } else if (configs.deny && roles.some(r => configs.deny.includes(r))) {
+        result = {
+            access: false,
+            redirect: configs.redirect
+        }
+        break
+      }
+      
+      if (this.isBoolean(configs.allow) && !configs.allow) {
         result = {
           access: false,
           redirect: configs.redirect
+        }
+        break
+      } else if (configs.allow && !roles.some(r => configs.allow.includes(r))) {
+        result = {
+            access: false,
+            redirect: configs.redirect
         }
         break
       }
@@ -269,7 +283,7 @@ export default class Manager {
    * @returns
    * @memberof Manager
    */
-  _getMetaRoles (route) {
+  _getMetaRoles (route, params) {
     const configs = {
       allow: null,
       deny: null,
@@ -313,8 +327,8 @@ export default class Manager {
         if (Array.isArray(meta.allow)) {
           configs.allow = meta.allow.filter(this._isValidRoleName)
         } else if (typeof meta.allow === 'function') {
-          const _meta = meta.allow(this.vm.userRoles, route)
-          configs.allow = Array.isArray(_meta) ? _meta : [_meta]
+          const _meta = meta.allow(this.vm.userRoles, route, params)
+          configs.allow = Array.isArray(_meta) || this.isBoolean(_meta) ? _meta : [_meta]
         } else if (this._isValidRoleName(meta.allow)) {
           configs.allow = [meta.allow]
         }
@@ -323,8 +337,8 @@ export default class Manager {
         if (Array.isArray(meta.deny)) {
           configs.deny = meta.deny.filter(this._isValidRoleName)
         } else if (typeof meta.deny === 'function') {
-          const _meta = meta.deny(this.vm.userRoles, route)
-          configs.deny = Array.isArray(_meta) ? _meta : [_meta]
+          const _meta = meta.deny(this.vm.userRoles, route, params)
+          configs.deny = Array.isArray(_meta) || this.isBoolean(_meta) ? _meta : [_meta]
         } else if (this._isValidRoleName(meta.deny)) {
           configs.deny = [meta.deny]
         }
@@ -332,6 +346,10 @@ export default class Manager {
     }
 
     return configs
+  }
+
+  isBoolean(value) {
+     return typeof value === 'boolean';
   }
 
   _wrapUserRoles () {
