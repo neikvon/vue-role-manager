@@ -3,9 +3,11 @@
     <div id="nav">
       <router-link :to="{ name: 'home' }">Home</router-link>|
       <router-link :to="{ name: 'user' }">User</router-link>|
-      <!-- <router-link :to="{ name: 'admin', params: { id: 123 }, query: {str: 'xxx'} }">Admin</router-link>| -->
-      <router-link to="/admin/222">Admin</router-link>|
-      <router-link :to="{ name: 'super' }">Super</router-link>
+      <router-link :to="{ name: 'admin', params: { id: '123' }, query: {str: 'xxx'} }">Admin123</router-link>|
+      <router-link to="/admin/222">Admin222</router-link>|
+      <router-link :to="{ name: 'super', params: { id: 1 } }">Super</router-link>|
+      <router-link :to="{ name: 'level-2', params: { id: 1, name: 'x' } }">Super level-2</router-link>|
+      <router-link :to="{ name: 'level-3', params: { id: 1, name: 'x', gender: 1 } }">Super level-3</router-link>
 
       <div class="roles-wrap">
         Select roles:

@@ -18,7 +18,7 @@ Vue.use(VRM, options)
 - `redirect`: (optional) Default redirect name. default: `'login'`
 - `metaName`: (optional) Meta name in router config. default: `'roles'`
 - `whitelist`: (optional) Array of route names. VRM will skip checking these
-  routes.
+  routes. default: value of `redirect`
 - `debug`: (optional) Show debug info in console or not. default: `false`
 - `enabled`: (optional) Enable route filter by role or not. default: `true`
 
@@ -54,7 +54,8 @@ Vue.use(VRM, options)
     allow: 'role1',
     deny: 'role3',
     redirect: 'login',
-    whitelist: ['login']
+    whitelist: ['login'],
+    inherit: false // default: true. inherit parent route permission
   }
 
   roles: {
@@ -66,24 +67,51 @@ Vue.use(VRM, options)
 - Function
 
   ```js
-  // roles: current user roles
-  // route: current route object
-  roles: {
-    allow: (roles, route) => {
-      return ['role1', 'role2']
-    }
-  }
-
-  roles: (roles, route) => {
+  /**
+   * roles filter function
+   *
+   * @param {*} roles current user's roles
+   * @param {*} route current route object
+   * @param {*} params route params
+   * @param {*} query route query
+   * @returns string|array|boolean
+   */
+  roles: (roles, route, params, query) => {
     return {
       allow: 'role1',
       deny: 'role3',
       redirect: '401'
     }
   }
-  roles: (roles, route) => {
-    // Return allowed roles by default
-    return ['role1', 'role2']
+
+  roles: {
+    /**
+     * roles filter function
+     *
+     * @param {*} roles current user's roles
+     * @param {*} route current route object
+     * @param {*} params route params
+     * @param {*} query route query
+     * @returns string|array|boolean
+     */
+    allow: (roles, route, params, query) => {
+      return ['role1', 'role2'] // string|array|boolean
+    }
+  }
+
+  roles: {
+    /**
+     * roles filter function
+     *
+     * @param {*} roles current user's roles
+     * @param {*} route current route object
+     * @param {*} params route params
+     * @param {*} query route query
+     * @returns string|array|boolean
+     */
+    deny: (roles, route, params, query) => {
+      return true // string|array|boolean
+    }
   }
   ```
 
@@ -107,6 +135,13 @@ Vue.use(VRM, options)
   const userRoles = this.$vrm.getRoles()
   ```
 
+- addRoutes([route configs][, parent])
+
+  ```js
+  const { allRoutes, addedRoutes } = this.$vrm.addRoutes([...])
+  const { allRoutes, addedRoutes } = this.$vrm.addRoutes([...], 'parent-name')
+  ```
+
 - hasAccess([])
 
   ```js
@@ -114,25 +149,17 @@ Vue.use(VRM, options)
   const hasAccess = this.$vrm.hasAccess(['admin', 'editor', 'publisher'])
   ```
 
-- addRoutes([route configs][, parent])
+- hasAccessToRoute(route)
 
   ```js
-  const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...])
-  const { addedRoutes, allRoutes } = this.$vrm.addRoutes([...], 'parent-name')
+  const hasAccess = this.$vrm.hasAccessToRoute(string|route object)
   ```
 
-- hasAccessToRoute(string|route)
+- findRouteByName(name)
 
   ```js
-  this.$store.dispatch('user/hasLogin').then(hasLogin => {
-    if (hasLogin) {
-      const redirectTo = this.$route.query.redirect
-      const { access, redirect } = this.$vrm.hasAccessToRoute(redirectTo)
-      if (access) {
-        this.$router.push(redirectTo)
-      }
-    }
-  })
+  // check current user's role
+  const route = this.$vrm.findRouteByName('route-name')
   ```
 
 ## Directive

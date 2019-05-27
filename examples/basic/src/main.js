@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import VRM from 'vue-role-manager'
+import VRM from '../../../src/index.js'
 
 Vue.config.productionTip = false
 

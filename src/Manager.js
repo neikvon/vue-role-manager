@@ -1,4 +1,12 @@
-// Fork from 'https://github.com/anthonygore/vue-router-user-roles/blob/master/src/RouteProtect.js'
+const isBoolean = value => typeof value === 'boolean'
+const isArray = value => Array.isArray(value)
+const isJson = obj => {
+  try {
+    return obj.constructor === {}.constructor
+  } catch (err) {}
+  return false
+}
+const isValidRoleName = name => typeof name === 'string' || !isNaN(name)
 
 export default class Manager {
   constructor (
@@ -15,14 +23,16 @@ export default class Manager {
     this.router = router
     this.defaultRedirect = redirect
     this.metaName = metaName
-    this.whitelist = Array.isArray(whitelist) ? whitelist : [whitelist]
+    this.whitelist = isArray(whitelist) ? whitelist : [whitelist]
     this.debug = debug
     this.enabled = enabled
-    this.whitelist.push(this.defaultRedirect)
+    if (this.defaultRedirect) {
+      this.whitelist.push(this.defaultRedirect)
+    }
 
     this.vm = new Vue({
       data: {
-        userRoles: null
+        userRoles: []
       }
     })
 
@@ -30,15 +40,27 @@ export default class Manager {
     this.tmpRoute = null
   }
 
+  /**
+   * get current user's roles
+   *
+   * @returns
+   * @memberof Manager
+   */
   getRoles () {
-    if (!this.vm.userRoles) {
+    if (!isArray(this.vm.userRoles) || this.vm.userRoles.length < 1) {
       throw new Error('Attempt to access user roles before being set')
     }
     return this.vm.userRoles
   }
 
+  /**
+   * set current user's roles
+   *
+   * @param {*} roles
+   * @memberof Manager
+   */
   setRoles (roles) {
-    this.vm.userRoles = roles
+    this.vm.userRoles = roles ? (isArray(roles) ? roles : [roles]) : []
     if (this.to && this.router) {
       const { access, redirect } = this.hasAccessToRoute(this.to)
       if (!access) {
@@ -52,17 +74,23 @@ export default class Manager {
     }
   }
 
-  hasAccess (_configs) {
-    if (!_configs) {
-      throw new Error('param is required')
+  /**
+   * check current user's roles
+   *
+   * @param {*} roles roles to check
+   * @returns
+   * @memberof Manager
+   */
+  hasAccess (roles) {
+    if (!roles) {
+      throw new Error('Param is required')
     }
-    const configs = Array.isArray(_configs) ? _configs : [_configs]
-    const roles = this._wrapUserRoles()
-    return roles.some(role => configs.includes(role))
+    const _roles = isArray(roles) ? roles : [roles]
+    return this.vm.userRoles.some(role => _roles.includes(role))
   }
 
   /**
-   * Add routes
+   * add routes
    * addRoutes([routesConfig])
    * addRoutes([routesConfig], '/parent')
    * addRoutes([routesConfig], 'parent')
@@ -103,7 +131,7 @@ export default class Manager {
       }
     }
 
-    const _routes = Array.isArray(routes) ? routes : [routes]
+    const _routes = isArray(routes) ? routes : [routes]
     const allowdRoutes = this.enabled ? this._routesFilterByRole(_routes, true) : _routes
 
     if (!allowdRoutes || allowdRoutes.length < 0) {
@@ -120,7 +148,7 @@ export default class Manager {
       this.allRoutes = this.allRoutes.concat(allowdRoutes)
     }
 
-    this.router.addRoutes(Array.isArray(matchedRoute) ? matchedRoute : [matchedRoute], {
+    this.router.addRoutes(isArray(matchedRoute) ? matchedRoute : [matchedRoute], {
       replace: true
     })
 
@@ -129,17 +157,25 @@ export default class Manager {
       allRoutes: this.allRoutes
     }
   }
+
+  /**
+   * resolve route
+   *
+   * @param {*} to
+   * @param {*} from
+   * @param {*} next
+   * @memberof Manager
+   */
   resolve (to, from, next) {
     this.to = to
     const { access, redirect, skipped } = this.hasAccessToRoute(to)
 
     if (this.debug && !skipped) {
       console.log(
-        '[VRM] roles:',
-        this.vm.userRoles,
-        'route:',
-        to,
-        `=> ${!access ? 'DENY, redirect to  "' + redirect + '"' : 'ALLOW'} `
+        `[VRM] ${access ? 'ALLOW' : 'DENY'} "${to.fullPath}" from roles "${this.vm.userRoles.join(
+          ','
+        )}".`,
+        !access ? `Redirect to ${redirect}.` : ''
       )
     }
 
@@ -153,12 +189,20 @@ export default class Manager {
       })
   }
 
+  /**
+   * check if the current user has access to a specified route
+   *
+   * @param {*} route string|route object
+   * @param {*} isFilter
+   * @returns
+   * @memberof Manager
+   */
   hasAccessToRoute (route, isFilter) {
-    const _route = typeof route === 'string' ? this.router.resolve(route).route : route
+    const currentRoute = typeof route === 'string' ? this.router.resolve(route).route : route
 
-    if (this.whitelist.includes(_route.name)) {
+    if (this.whitelist.includes(currentRoute.name)) {
       if (this.debug) {
-        console.log('[VRM] skipped:', _route.name)
+        console.log('[VRM] skipped:', currentRoute.name)
       }
       return {
         access: true,
@@ -166,37 +210,64 @@ export default class Manager {
       }
     }
 
-    // user roles
-    const roles = this._wrapUserRoles()
-    const routes = _route.matched || [_route]
+    const params = currentRoute.params
+    const query = currentRoute.query
+    const currentConfig = this._resolveConfigs(currentRoute, params, query)
+    const currentAccess = this._resolvePermission(currentConfig)
 
+    if (this.debug) {
+      console.log('[VRM] configs:', currentConfig)
+    }
+
+    if (!currentAccess) {
+      if (this.debug && isFilter) {
+        console.log('[VRM] filter:', currentRoute.path, 'DENY')
+      }
+      return {
+        access: false,
+        redirect: currentConfig.redirect
+      }
+    }
+
+    if (!currentConfig.inherit) {
+      if (this.debug && isFilter) {
+        console.log('[VRM] filter:', currentRoute.path, currentAccess ? 'ALLOW' : 'DENY')
+      }
+      return {
+        access: currentAccess,
+        redirect: currentConfig.redirect
+      }
+    }
+
+    const parentRoutes = currentRoute.matched
+      ? currentRoute.matched.slice(0, currentRoute.matched.length - 1)
+      : []
     let result
-    for (let i = routes.length - 1; i >= 0; i--) {
-      const item = routes[i]
 
-      const configs = this._getMetaRoles(item)
+    for (let i = parentRoutes.length - 1; i >= 0; i--) {
+      const parent = parentRoutes[i]
+
+      const configs = this._resolveConfigs(parent, params, query)
       if (!configs) {
         break
       }
 
-      if (configs.deny && roles.some(r => configs.deny.includes(r))) {
-        result = {
-          access: false,
-          redirect: configs.redirect
-        }
+      if (this.debug) {
+        console.log('[VRM] configs:', configs)
+      }
 
-        break
-      } else if (configs.allow && !roles.some(r => configs.allow.includes(r))) {
-        result = {
-          access: false,
-          redirect: configs.redirect
-        }
+      const access = this._resolvePermission(configs)
+      result = {
+        access,
+        redirect: configs.redirect
+      }
+      if (configs.strip || !access) {
         break
       }
     }
 
-    if (isFilter && this.debug) {
-      console.log('[VRM] filter:', _route.path, result ? 'DENY' : 'ALLOW')
+    if (this.debug && isFilter) {
+      console.log('[VRM] filter:', currentRoute.path, result ? 'DENY' : 'ALLOW')
     }
 
     return (
@@ -206,11 +277,19 @@ export default class Manager {
     )
   }
 
+  /**
+   * find the route by route name
+   *
+   * @param {*} name
+   * @param {*} [routes=this.allRoutes]
+   * @returns
+   * @memberof Manager
+   */
   findRouteByName (name, routes = this.allRoutes) {
     if (this.tmpRoute) {
       this.tmpRoute = null
     }
-    if (!name || !Array.isArray(routes)) {
+    if (!name || !isArray(routes)) {
       return null
     }
 
@@ -218,7 +297,7 @@ export default class Manager {
       const item = routes[i]
       if (item.name === name) {
         this.tmpRoute = item
-      } else if (Array.isArray(item.children)) {
+      } else if (isArray(item.children)) {
         this.findRouteByName(name, item.children)
       }
       if (this.tmpRoute) {
@@ -230,24 +309,25 @@ export default class Manager {
   }
 
   /**
-   * getRolesFromMeta
+   * resolve configs
    *
-   m: (user, route) => {
-     return ['role1', 'role2']
+   m: (user, route, params, query) => {
+     return array|object|boolean
    }
-   m: (user, route) => {
-     return {
-       allow: 'role1',
-       deny: 'role3',
-       redirect: ''
+   m: {
+     allow: (user, route, params, query) => {
+        return array|object|boolean
+     }
+   }
+   m: {
+     deny: (user, route, params, query) => {
+        return array|object|boolean
      }
    }
 
-   m: 'role1'
-   m: 1
+   m: 'role1'|1
 
    m: ['role1', 'role2']
-   m: [1, 2]
 
    m: {
      allow: 'role1',
@@ -260,20 +340,16 @@ export default class Manager {
      deny: ['role3']
    }
 
-   m: {
-     allow: (user, route) => {
-       return ['role1', 'role2']
-     }
-   }
    * @param {*} route
    * @returns
    * @memberof Manager
    */
-  _getMetaRoles (route) {
+  _resolveConfigs (route, params, query) {
     const configs = {
       allow: null,
       deny: null,
-      redirect: null
+      redirect: this.defaultRedirect,
+      inherit: true
     }
 
     if (!route.meta || !route.meta[this.metaName]) {
@@ -283,49 +359,63 @@ export default class Manager {
     const meta = route.meta[this.metaName]
 
     if (typeof meta === 'function') {
-      const result = meta(this.vm.userRoles, route)
-      return Object.assign(
-        {},
-        configs,
-        { redirect: this.defaultRedirect },
-        Array.isArray(result)
-          ? {
-            allow: result
-          }
-          : result
-      )
+      const result = meta(this.vm.userRoles, route, params, query)
+      if (isBoolean(result)) {
+        configs[result ? 'allow' : 'deny'] = true
+
+        return configs
+      }
+
+      if (isArray(result)) {
+        return Object.assign({}, configs, {
+          allow: result
+        })
+      }
+
+      return Object.assign({}, configs, result, {
+        allow:
+          isArray(result.allow) || isBoolean(result.allow) || !result.allow
+            ? result.allow
+            : [result.allow],
+        deny:
+          isArray(result.deny) || isBoolean(result.deny) || !result.deny
+            ? result.deny
+            : [result.deny]
+      })
     }
 
-    configs.redirect = meta.redirect || this.defaultRedirect
+    if (meta.redirect) {
+      configs.redirect = meta.redirect
+    }
 
-    if (this._isValidRoleName(meta)) {
+    if (isValidRoleName(meta)) {
       configs.allow = [meta]
       return configs
     }
 
-    if (Array.isArray(meta)) {
-      configs.allow = meta.filter(this._isValidRoleName)
+    if (isArray(meta)) {
+      configs.allow = meta.filter(isValidRoleName)
       return configs
     }
 
-    if (this._isJson(meta)) {
+    if (isJson(meta)) {
       if (meta.allow) {
-        if (Array.isArray(meta.allow)) {
-          configs.allow = meta.allow.filter(this._isValidRoleName)
+        if (isArray(meta.allow)) {
+          configs.allow = meta.allow.filter(isValidRoleName)
         } else if (typeof meta.allow === 'function') {
-          const _meta = meta.allow(this.vm.userRoles, route)
-          configs.allow = Array.isArray(_meta) ? _meta : [_meta]
-        } else if (this._isValidRoleName(meta.allow)) {
+          const _meta = meta.allow(this.vm.userRoles, route, params, query)
+          configs.allow = isArray(_meta) || isBoolean(_meta) || !_meta ? _meta : [_meta]
+        } else if (isValidRoleName(meta.allow)) {
           configs.allow = [meta.allow]
         }
       }
       if (meta.deny) {
-        if (Array.isArray(meta.deny)) {
-          configs.deny = meta.deny.filter(this._isValidRoleName)
+        if (isArray(meta.deny)) {
+          configs.deny = meta.deny.filter(isValidRoleName)
         } else if (typeof meta.deny === 'function') {
-          const _meta = meta.deny(this.vm.userRoles, route)
-          configs.deny = Array.isArray(_meta) ? _meta : [_meta]
-        } else if (this._isValidRoleName(meta.deny)) {
+          const _meta = meta.deny(this.vm.userRoles, route, params, query)
+          configs.deny = isArray(_meta) || isBoolean(_meta) || !_meta ? _meta : [_meta]
+        } else if (isValidRoleName(meta.deny)) {
           configs.deny = [meta.deny]
         }
       }
@@ -334,13 +424,22 @@ export default class Manager {
     return configs
   }
 
-  _wrapUserRoles () {
-    const roles = this.vm.userRoles
-    if (!roles) {
-      return []
+  _resolvePermission (configs) {
+    // deny
+    if (isBoolean(configs.deny) && configs.deny) {
+      return false
+    } else if (isArray(configs.deny) && this.vm.userRoles.some(r => configs.deny.includes(r))) {
+      return false
     }
 
-    return Array.isArray(roles) ? roles : [roles]
+    // allow
+    if (isBoolean(configs.allow) && !configs.allow) {
+      return false
+    } else if (isArray(configs.allow) && !this.vm.userRoles.some(r => configs.allow.includes(r))) {
+      return false
+    }
+
+    return true
   }
 
   _routesFilterByRole (routes, isFilter) {
@@ -355,16 +454,5 @@ export default class Manager {
       return false
     })
     return allowedRoutes
-  }
-
-  _isValidRoleName (name) {
-    return typeof name === 'string' || !isNaN(name)
-  }
-
-  _isJson (obj) {
-    try {
-      return obj.constructor === {}.constructor
-    } catch (err) {}
-    return false
   }
 }
