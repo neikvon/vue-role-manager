@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/neikvon/vue-role-manager/compare/v1.1.2...v1.2.0) (2019-05-27)
+
+
+### Bug Fixes
+
+* typo in readme ([2a4b700](https://github.com/neikvon/vue-role-manager/commit/2a4b700))
+
+
+### Features
+
+* provide route params and query for meta function;add 'inherit' option for meta config ([4b8c162](https://github.com/neikvon/vue-role-manager/commit/4b8c162))
+
+
+
 <a name="1.1.2"></a>
 ## [1.1.2](https://github.com/neikvon/vue-role-manager/compare/v1.1.1...v1.1.2) (2019-04-30)
 
